@@ -873,7 +873,7 @@ def visualize_results(
             if count == a_index:
                 joints_index = index_to(d2j_points_index)
                 gimg[name] = cv2.circle(
-                    # cv2.cvtColor(gimg[name], cv2.COLOR_BGR2RGB),
+                    cv2.cvtColor(gimg[name], cv2.COLOR_BGR2RGB),
                     gimg[name],
                     (int(p[0]), int(p[1])),
                     3,
@@ -1118,7 +1118,6 @@ def save_results(
         pickle.dump(result, result_file, protocol=2)
 
     if save_meshes or save_images:
-        #### the following line gives out the mesh for a particular SMPL parameter
         model_output = model(
             global_orient=torch.tensor(result["pose"][:, :3], device=setting["device"]),
             transl=torch.tensor(result["transl"], device=setting["device"]),

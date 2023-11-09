@@ -32,7 +32,7 @@ float_dtype: "float32"
 gender: neutral # male female neutral
 
 #prior related
-use_vposer: true
+use_vposer: fakse
 prior_folder: 'priors'
 body_prior_type: 'l2'
 
@@ -74,7 +74,7 @@ fix_shape: false
 shape:
     - 2.39806 
     - 0.678491
-    - 10.38193 
+    - 1.38193 
     - -0.966748 
     - -1.29383 
     - -0.795755 

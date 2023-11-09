@@ -14,7 +14,6 @@ ext_modules = [
             "sdf/csrc/sdf_cuda.cpp",
             "sdf/csrc/sdf_cuda_kernel.cu",
         ],
-        extra_compile_args={"cxx": [], "nvcc": ["--use_fast_math"]},
     ),
 ]
 
@@ -29,5 +28,5 @@ setup(
     install_requires=INSTALL_REQUIREMENTS,
     ext_modules=ext_modules,
     # cmdclass = {'build_ext': BuildExtension}
-    cmdclass={"build_ext": build_ext},
+    cmdclass={"build_ext": setuptools.command.build_ext.build_ext},
 )

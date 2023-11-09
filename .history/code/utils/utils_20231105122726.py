@@ -975,7 +975,7 @@ def save_results(
     renderList = []
     for imgPath in img_path:
         img = cv2.imread(imgPath)
-        renderList.append(Renderer((img.shape[1], img.shape[0])))
+        # renderList.append(Renderer((img.shape[1], img.shape[0])))
 
     if setting["adjustment"]:
         global my_betas, my_transl, my_global_orient, origianl_betas, original_transl, original_orient, original_pose, my_changed_body_pose, my_body_pose, key

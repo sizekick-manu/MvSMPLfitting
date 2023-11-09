@@ -32,7 +32,7 @@ float_dtype: "float32"
 gender: neutral # male female neutral
 
 #prior related
-use_vposer: true
+use_vposer: false
 prior_folder: 'priors'
 body_prior_type: 'l2'
 

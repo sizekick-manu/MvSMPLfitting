@@ -1118,7 +1118,6 @@ def save_results(
         pickle.dump(result, result_file, protocol=2)
 
     if save_meshes or save_images:
-        #### the following line gives out the mesh for a particular SMPL parameter
         model_output = model(
             global_orient=torch.tensor(result["pose"][:, :3], device=setting["device"]),
             transl=torch.tensor(result["transl"], device=setting["device"]),

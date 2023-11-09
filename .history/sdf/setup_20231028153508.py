@@ -14,7 +14,6 @@ ext_modules = [
             "sdf/csrc/sdf_cuda.cpp",
             "sdf/csrc/sdf_cuda_kernel.cu",
         ],
-        extra_compile_args={"cxx": [], "nvcc": ["--use_fast_math"]},
     ),
 ]
 
