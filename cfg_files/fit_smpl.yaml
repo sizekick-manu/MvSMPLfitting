@@ -27,7 +27,7 @@ dataset: 'offline'
 
 # model related
 model_folder: 'models'
-model_type: 'smpllsp' # smpl smpllsp
+model_type: 'smpl' # smpl smpllsp
 float_dtype: "float32"
 gender: neutral # male female neutral
 
