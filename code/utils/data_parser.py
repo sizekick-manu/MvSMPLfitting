@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-'''
+"""
  @FileName    : data_parser.py
  @EditTime    : 2021-09-19 21:47:11
  @Author      : Buzhen Huang
  @Email       : hbz@seu.edu.cn
  @Description : 
-'''
+"""
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -26,21 +26,24 @@ import torch
 from torch.utils.data import Dataset
 from utils.utils import smpl_to_annotation
 
-Keypoints = namedtuple('Keypoints',
-                       ['keypoints', 'gender_gt', 'gender_pd'])
+Keypoints = namedtuple("Keypoints", ["keypoints", "gender_gt", "gender_pd"])
 
 Keypoints.__new__.__defaults__ = (None,) * len(Keypoints._fields)
 
 
-def create_dataset(dataset='offline', data_folder='data', pose_format='coco17', **kwargs):
-    if dataset.lower() == 'offline':
+# def create_dataset(
+#     dataset="offline", data_folder="data", pose_format="coco17", **kwargs
+# ):
+def create_dataset(
+    dataset="offline", data_folder="data", pose_format="coco17", **kwargs
+):
+    if dataset.lower() == "offline":
         return FittingData(data_folder, pose_format=pose_format, **kwargs)
     else:
-        raise ValueError('Unknown dataset: {}'.format(dataset))
+        raise ValueError("Unknown dataset: {}".format(dataset))
 
 
-def read_keypoints(keypoint_fn, use_hands=True, use_face=True,
-                   use_face_contour=False):
+def read_keypoints(keypoint_fn, use_hands=True, use_face=True, use_face_contour=False):
     with open(keypoint_fn) as keypoint_file:
         data = json.load(keypoint_file)
 
@@ -48,50 +51,48 @@ def read_keypoints(keypoint_fn, use_hands=True, use_face=True,
 
     gender_pd = []
     gender_gt = []
-    for idx, person_data in enumerate(data['people']):
-        body_keypoints = np.array(person_data['pose_keypoints_2d'],
-                                  dtype=np.float32)
+    for idx, person_data in enumerate(data["people"]):
+        body_keypoints = np.array(person_data["pose_keypoints_2d"], dtype=np.float32)
         body_keypoints = body_keypoints.reshape([-1, 3])
         if use_hands:
             left_hand_keyp = np.array(
-                person_data['hand_left_keypoints_2d'],
-                dtype=np.float32).reshape([-1, 3])
+                person_data["hand_left_keypoints_2d"], dtype=np.float32
+            ).reshape([-1, 3])
             right_hand_keyp = np.array(
-                person_data['hand_right_keypoints_2d'],
-                dtype=np.float32).reshape([-1, 3])
+                person_data["hand_right_keypoints_2d"], dtype=np.float32
+            ).reshape([-1, 3])
 
             body_keypoints = np.concatenate(
-                [body_keypoints, left_hand_keyp, right_hand_keyp], axis=0)
+                [body_keypoints, left_hand_keyp, right_hand_keyp], axis=0
+            )
         if use_face:
             # TODO: Make parameters, 17 is the offset for the eye brows,
             # etc. 51 is the total number of FLAME compatible landmarks
             face_keypoints = np.array(
-                person_data['face_keypoints_2d'],
-                dtype=np.float32).reshape([-1, 3])[17: 17 + 51, :]
+                person_data["face_keypoints_2d"], dtype=np.float32
+            ).reshape([-1, 3])[17 : 17 + 51, :]
 
-            contour_keyps = np.array(
-                [], dtype=body_keypoints.dtype).reshape(0, 3)
+            contour_keyps = np.array([], dtype=body_keypoints.dtype).reshape(0, 3)
             if use_face_contour:
                 contour_keyps = np.array(
-                    person_data['face_keypoints_2d'],
-                    dtype=np.float32).reshape([-1, 3])[:17, :]
+                    person_data["face_keypoints_2d"], dtype=np.float32
+                ).reshape([-1, 3])[:17, :]
 
             body_keypoints = np.concatenate(
-                [body_keypoints, face_keypoints, contour_keyps], axis=0)
+                [body_keypoints, face_keypoints, contour_keyps], axis=0
+            )
 
-        if 'gender_pd' in person_data:
-            gender_pd.append(person_data['gender_pd'])
-        if 'gender_gt' in person_data:
-            gender_gt.append(person_data['gender_gt'])
+        if "gender_pd" in person_data:
+            gender_pd.append(person_data["gender_pd"])
+        if "gender_gt" in person_data:
+            gender_gt.append(person_data["gender_gt"])
 
         keypoints.append(body_keypoints)
 
-    return Keypoints(keypoints=keypoints, gender_pd=gender_pd,
-                     gender_gt=gender_gt)
+    return Keypoints(keypoints=keypoints, gender_pd=gender_pd, gender_gt=gender_gt)
 
 
-def read_joints(keypoint_fn, use_hands=True, use_face=True,
-                use_face_contour=False):
+def read_joints(keypoint_fn, use_hands=True, use_face=True, use_face_contour=False):
     """
     load 3D annotation
     """
@@ -102,48 +103,50 @@ def read_joints(keypoint_fn, use_hands=True, use_face=True,
 
     gender_pd = []
     gender_gt = []
-    for idx, person_data in enumerate(data['people']):
+    for idx, person_data in enumerate(data["people"]):
         try:
-            body_keypoints = np.array(person_data['pose_keypoints_3d'],
-                                      dtype=np.float32)
+            body_keypoints = np.array(
+                person_data["pose_keypoints_3d"], dtype=np.float32
+            )
             body_keypoints = body_keypoints.reshape([-1, 4])
             if use_hands:
                 left_hand_keyp = np.array(
-                    person_data['hand_left_keypoints_3d'],
-                    dtype=np.float32).reshape([-1, 4])
+                    person_data["hand_left_keypoints_3d"], dtype=np.float32
+                ).reshape([-1, 4])
                 right_hand_keyp = np.array(
-                    person_data['hand_right_keypoints_3d'],
-                    dtype=np.float32).reshape([-1, 4])
+                    person_data["hand_right_keypoints_3d"], dtype=np.float32
+                ).reshape([-1, 4])
 
                 body_keypoints = np.concatenate(
-                    [body_keypoints, left_hand_keyp, right_hand_keyp], axis=0)
+                    [body_keypoints, left_hand_keyp, right_hand_keyp], axis=0
+                )
             if use_face:
                 # TODO: Make parameters, 17 is the offset for the eye brows,
                 # etc. 51 is the total number of FLAME compatible landmarks
                 face_keypoints = np.array(
-                    person_data['face_keypoints_3d'],
-                    dtype=np.float32).reshape([-1, 4])[17: 17 + 51, :]
+                    person_data["face_keypoints_3d"], dtype=np.float32
+                ).reshape([-1, 4])[17 : 17 + 51, :]
 
-                contour_keyps = np.array(
-                    [], dtype=body_keypoints.dtype).reshape(0, 4)
+                contour_keyps = np.array([], dtype=body_keypoints.dtype).reshape(0, 4)
                 if use_face_contour:
                     contour_keyps = np.array(
-                        person_data['face_keypoints_3d'],
-                        dtype=np.float32).reshape([-1, 4])[:17, :]
+                        person_data["face_keypoints_3d"], dtype=np.float32
+                    ).reshape([-1, 4])[:17, :]
 
                 body_keypoints = np.concatenate(
-                    [body_keypoints, face_keypoints, contour_keyps], axis=0)
+                    [body_keypoints, face_keypoints, contour_keyps], axis=0
+                )
             keypoints.append(body_keypoints)
         except:
             keypoints = None
 
-        if 'gender_pd' in person_data:
-            gender_pd.append(person_data['gender_pd'])
-        if 'gender_gt' in person_data:
-            gender_gt.append(person_data['gender_gt'])
+        if "gender_pd" in person_data:
+            gender_pd.append(person_data["gender_pd"])
+        if "gender_gt" in person_data:
+            gender_gt.append(person_data["gender_gt"])
 
-    return Keypoints(keypoints=keypoints, gender_pd=gender_pd,
-                     gender_gt=gender_gt)
+    return Keypoints(keypoints=keypoints, gender_pd=gender_pd, gender_gt=gender_gt)
+
 
 # class OpenPose(Dataset):
 
@@ -269,23 +272,27 @@ def read_joints(keypoint_fn, use_hands=True, use_face=True,
 
 #         return self.read_item(img_path)
 
-class FittingData(Dataset):
 
+class FittingData(Dataset):
     NUM_BODY_JOINTS = 17
     NUM_HAND_JOINTS = 20
 
-    def __init__(self, data_folder, img_folder='images',
-                 keyp_folder='keypoints',
-                 use_hands=False,
-                 use_face=False,
-                 dtype=torch.float32,
-                 model_type='smplx',
-                 joints_to_ign=None,
-                 use_face_contour=False,
-                 pose_format='coco17',
-                 use_3d=False,
-                 use_hip=True,
-                 **kwargs):
+    def __init__(
+        self,
+        data_folder,
+        img_folder="images",
+        keyp_folder="keypoints",
+        use_hands=False,
+        use_face=False,
+        dtype=torch.float32,
+        model_type="smplx",
+        joints_to_ign=None,
+        use_face_contour=False,
+        pose_format="coco17",
+        use_3d=False,
+        use_hip=True,
+        **kwargs
+    ):
         super(FittingData, self).__init__()
 
         self.use_hands = use_hands
@@ -299,11 +306,12 @@ class FittingData(Dataset):
 
         self.pose_format = pose_format
 
-        self.num_joints = (self.NUM_BODY_JOINTS +
-                           2 * self.NUM_HAND_JOINTS * use_hands)
+        self.num_joints = self.NUM_BODY_JOINTS + 2 * self.NUM_HAND_JOINTS * use_hands
 
-        self.img_folder = osp.join(data_folder, img_folder)
-        self.keyp_folder = osp.join(data_folder, keyp_folder)
+        # self.img_folder = osp.join(data_folder, img_folder)
+        self.img_folder = "data/sample_data_input/images"
+        # self.keyp_folder = osp.join(data_folder, keyp_folder)
+        self.keyp_folder = "data/sample_data_input/keypoints"
 
         img_serials = sorted(os.listdir(self.img_folder))
         self.img_paths = []
@@ -313,12 +321,15 @@ class FittingData(Dataset):
             this_serials = []
             for i_cam in img_cameras:
                 i_c_dir = osp.join(i_s_dir, i_cam)
-                cam_imgs = [osp.join(i_c_dir, img_fn)
-                            for img_fn in os.listdir(i_c_dir)
-                            if img_fn.endswith('.png') or
-                            img_fn.endswith('.jpg') and
-                            not img_fn.startswith('.')]
-                cam_imgs = sorted(cam_imgs)
+                # cam_imgs = [
+                #     osp.join(i_c_dir, img_fn)
+                #     for img_fn in os.listdir(i_c_dir)
+                #     if img_fn.endswith(".png")
+                #     or img_fn.endswith(".jpg")
+                #     and not img_fn.startswith(".")
+                # ]
+                cam_imgs = i_c_dir
+                # cam_imgs = sorted(cam_imgs)
                 this_serials.append(cam_imgs)
             self.img_paths.append(this_serials)
 
@@ -326,10 +337,13 @@ class FittingData(Dataset):
         self.serial_cnt = 0
 
     def get_model2data(self):
-        return smpl_to_annotation(self.model_type, use_hands=self.use_hands,
-                                  use_face=self.use_face,
-                                  use_face_contour=self.use_face_contour,
-                                  pose_format=self.pose_format)
+        return smpl_to_annotation(
+            self.model_type,
+            use_hands=self.use_hands,
+            use_face=self.use_face,
+            use_face_contour=self.use_face_contour,
+            pose_format=self.pose_format,
+        )
 
     def get_left_shoulder(self):
         return 2
@@ -339,10 +353,13 @@ class FittingData(Dataset):
 
     def get_joint_weights(self):
         # The weights for the joint terms in the optimization
-        optim_weights = np.ones(self.num_joints + 2 * self.use_hands +
-                                self.use_face * 51 +
-                                17 * self.use_face_contour,
-                                dtype=np.float32)
+        optim_weights = np.ones(
+            self.num_joints
+            + 2 * self.use_hands
+            + self.use_face * 51
+            + 17 * self.use_face_contour,
+            dtype=np.float32,
+        )
 
         # Neck, Left and right hip
         # These joints are ignored because SMPL has no neck joint and the
@@ -351,9 +368,9 @@ class FittingData(Dataset):
         # if self.joints_to_ign is not None and -1 not in self.joints_to_ign:
         #     optim_weights[self.joints_to_ign] = 0.
         # return torch.tensor(optim_weights, dtype=self.dtype)
-        if self.pose_format != 'lsp14' or not self.use_hip:
-            optim_weights[11] = 0.
-            optim_weights[12] = 0.
+        if self.pose_format != "lsp14" or not self.use_hip:
+            optim_weights[11] = 0.0
+            optim_weights[12] = 0.0
         return torch.tensor(optim_weights, dtype=self.dtype)
 
     def __len__(self):
@@ -367,46 +384,57 @@ class FittingData(Dataset):
         img = []
         keypoints = []
         joints3d = None
-        for img_path in img_paths:
-            img_ = cv2.imread(img_path).astype(np.float32)[:, :, ::-1] / 255.0
-            areas, img_fn = osp.split(img_path)
-            if sys.platform == 'linux':
-                areas = areas.split("/")
-            else:
-                areas = areas.split("\\")
-            serial = areas[-2]
-            cam = areas[-1]
-            img_fn, _ = osp.splitext(osp.split(img_path)[1])
+        # for img_path in img_paths:
+        img_path = img_paths
+        img_ = cv2.imread(img_path).astype(np.float32)[:, :, ::-1] / 255.0
+        areas, img_fn = osp.split(img_path)
+        if sys.platform == "linux":
+            areas = areas.split("/")
+        else:
+            areas = areas.split("\\")
+        serial = areas[-2]
+        cam = areas[-1]
+        img_fn, _ = osp.splitext(osp.split(img_path)[1])
 
-            keypoint_fn = osp.join(
-                self.keyp_folder, serial, cam, img_fn + '_keypoints.json')
+        # keypoint_fn = osp.join(
+        #     self.keyp_folder, serial, cam, img_fn + "_keypoints.json"
+        # )
+        keypoint_fn = osp.join(self.keyp_folder, cam, img_fn + "_keypoints.json")
 
-            if not os.path.exists(keypoint_fn):
-                keypoints_ = None  # keypoints may not exist
-            else:
-                keyp_tuple = read_keypoints(keypoint_fn, use_hands=self.use_hands,
-                                            use_face=self.use_face,
-                                            use_face_contour=self.use_face_contour)
+        if not os.path.exists(keypoint_fn):
+            keypoints_ = None  # keypoints may not exist
+        else:
+            keyp_tuple = read_keypoints(
+                keypoint_fn,
+                use_hands=self.use_hands,
+                use_face=self.use_face,
+                use_face_contour=self.use_face_contour,
+            )
 
-                if len(keyp_tuple.keypoints) < 1:
-                    return {}
-                keypoints_ = np.stack(keyp_tuple.keypoints)
+            if len(keyp_tuple.keypoints) < 1:
+                return {}
+            keypoints_ = np.stack(keyp_tuple.keypoints)
 
-            img.append(img_)
-            keypoints.append(keypoints_)
+        img.append(img_)
+        keypoints.append(keypoints_)
 
-            if self.use_3d and joints3d is None and os.path.exists(keypoint_fn):
-                joints3d = read_joints(keypoint_fn, use_hands=self.use_hands,
-                                       use_face=self.use_face,
-                                       use_face_contour=self.use_face_contour)
-                joints3d = joints3d.keypoints
+        if self.use_3d and joints3d is None and os.path.exists(keypoint_fn):
+            joints3d = read_joints(
+                keypoint_fn,
+                use_hands=self.use_hands,
+                use_face=self.use_face,
+                use_face_contour=self.use_face_contour,
+            )
+            joints3d = joints3d.keypoints
 
-        output_dict = {'fn': img_fn,
-                       'serial': serial,
-                       'img_path': img_paths,
-                       'keypoints': keypoints,
-                       'img': img,
-                       '3d_joint': joints3d}
+        output_dict = {
+            "fn": img_fn,
+            "serial": serial,
+            "img_path": img_paths,
+            "keypoints": keypoints,
+            "img": img,
+            "3d_joint": joints3d,
+        }
 
         return output_dict
 
@@ -422,12 +450,12 @@ class FittingData(Dataset):
 
         img_path = self.img_paths[self.serial_cnt]
 
-        img_paths = []
-        for cam in img_path:
-            img_paths.append(cam[self.cnt])
-        self.cnt += 1
-        if self.cnt >= len(cam):
-            self.cnt = 0
-            self.serial_cnt += 1
-
-        return self.read_item(img_paths)
+        # img_paths = []
+        # for cam in img_path:
+        #     img_paths.append(cam[self.cnt])
+        # self.cnt += 1
+        # if self.cnt >= len(cam):
+        #     self.cnt = 0
+        #     self.serial_cnt += 1
+        img_path = img_path[self.cnt]
+        return self.read_item(img_path)

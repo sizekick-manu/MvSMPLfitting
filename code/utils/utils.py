@@ -714,19 +714,45 @@ def project_to_img(
         keyboardCall(keyMain, init_param=init_param)
     else:
         if not test:
-            for v in range(len(image_path)):
-                visualize_results(
-                    d2j[v],
-                    verts,
-                    faces,
-                    gt_joints[v],
-                    image_path[v],
-                    camera[v],
-                    renderList[v],
-                    keyMain,
-                    save=True,
-                    path=path,
-                )
+            # for v in range(len(image_path)):
+                # visualize_results(
+                #     d2j[v],
+                #     verts,
+                #     faces,
+                #     gt_joints[v],
+                #     image_path,
+                #     camera[v],
+                #     renderList[v],
+                #     keyMain,
+                #     save=True,
+                #     path=path,
+                # )
+
+            visualize_results(
+                d2j[0],
+                verts,
+                faces,
+                gt_joints[0],
+                image_path,
+                camera[0],
+                renderList[0],
+                keyMain,
+                save=True,
+                path=path,
+            )
+            # visualize_results(
+            #     d2j,
+            #     verts,
+            #     faces,
+            #     gt_joints,
+            #     image_path,
+            #     camera,
+            #     renderList,
+            #     keyMain,
+            #     save=True,
+            #     path=path,
+            # )
+
         else:
             for v in range(len(image_path)):
                 visualize_results(
@@ -942,6 +968,7 @@ def save_results(
     img_path = data["img_path"]
     keypoints = data["keypoints"]
     person_id = 0
+    person_id = data["person_id"]
 
     if use_vposer:
         pose_embedding = result["pose_embedding"]
@@ -973,9 +1000,9 @@ def save_results(
         result["pose"] = pose
 
     renderList = []
-    for imgPath in img_path:
-        img = cv2.imread(imgPath)
-        renderList.append(Renderer((img.shape[1], img.shape[0])))
+    # for imgPath in img_path:
+    img = cv2.imread(img_path)
+    renderList.append(Renderer((img.shape[1], img.shape[0])))
 
     if setting["adjustment"]:
         global my_betas, my_transl, my_global_orient, origianl_betas, original_transl, original_orient, original_pose, my_changed_body_pose, my_body_pose, key

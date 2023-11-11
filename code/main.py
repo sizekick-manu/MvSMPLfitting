@@ -21,11 +21,34 @@ from utils.init_guess import init_guess, load_init, fix_params
 from utils.non_linear_solver import non_linear_solver
 from utils.utils import save_results, change
 import cv2
+import json
+import detectron2
+from detectron2.utils.logger import setup_logger
+
+setup_logger()
+
+# import some common detectron2 utilities
+from detectron2 import model_zoo
+from detectron2.engine import DefaultPredictor
+from detectron2.config import get_cfg
+from detectron2.utils.visualizer import Visualizer
+from detectron2.data import MetadataCatalog
+
 
 keyps = []
 
+cfg = get_cfg()
+cfg.merge_from_file(
+    model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml")
+)
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7  # Set threshold for this model
+cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(
+    "COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml"
+)
+predictor = DefaultPredictor(cfg)
 
-def main(**args):
+
+def main(det_keyps, foldername, **args):
     global keyps
 
     dataset_obj, setting = init(**args)
@@ -57,7 +80,8 @@ def main(**args):
                 intrinsics.append(setting["intrinsics"][v])
                 cameras.append(setting["cameras"][v])
                 keyps.append(keypoints[v])
-                img_paths.append(data["img_path"][v])
+                # img_paths.append(data["img_path"][v])
+                img_paths.append(data["img_path"])
                 imgs.append(data["img"][v])
                 views += 1
         # viewpoint should greater than 1 if not use 3D annotation
@@ -69,8 +93,10 @@ def main(**args):
         setting["intris"] = np.array(intrinsics)
         setting["camera"] = cameras
         data["img"] = imgs
-        data["img_path"] = img_paths
+        data["img_path"] = img_paths[0]
+        ## replace keyps with the keypoints obtained from the 2D pose detection
         data["keypoints"] = keyps
+        data["keypoints"] = det_keyps
         # print("keypoints: ", keypoints)
         print("Processing: {}".format(data["img_path"]))
 
@@ -90,14 +116,57 @@ def main(**args):
         results = non_linear_solver(setting, data, **args)
 
         # save results
+        ## path to the input image
+        # data["img_path"] = "output/results/sample_result_output/images/"
+        # data["img_path"] = "data/sample_data_input/"
+
+        data["serial"] = foldername
+        data["fn"] = foldername
+        data["person_id"] = 1
+        ## for setting the output paths
+        setting["result_folder"] = "output/results/sample_result_output/images/"
+        setting["mesh_folder"] = "output/results/sample_result_output/scans/"
+        setting["img_path"] = "output/results/sample_result_output/images/"
+        setting["img_folder"] = "output/results/sample_result_output/images/"
         save_results(setting, data, results, **args)
+        break
 
     elapsed = time.time() - start
     time_msg = time.strftime("%H hours, %M minutes, %S seconds", time.gmtime(elapsed))
     print("Processing the data took: {}".format(time_msg))
 
 
+def keypoints_to_json_file(keypoints):
+    json_pose_object = {}
+    json_pose_object["version"] = 1.1
+    json_pose_object["people"] = []
+    json_pose_object["people"].append({"pose_keypoints_2d": keypoints[0].tolist()})
+    return json_pose_object
+
+
 if __name__ == "__main__":
     # sys.argv = ["", "--config=cfg_files/fit_smpl.yaml"]
     args = parse_config()
-    main(**args)
+    ## detect the pose using openpose here
+    foldername = "200002"
+    image_path = f"/home/manu.puthiyadath/projects/MvSMPLfitting/data/sample_data_input/images/{foldername}/0.png"
+    image = cv2.imread(image_path)
+    outputs = predictor(image)
+    keypoints = outputs["instances"].pred_keypoints.cpu().numpy()
+
+    ## write the keypoints to a file
+    keypoints_file_path = image_path.replace(".png", "_keypoints.json")
+    keypoints_file_path = keypoints_file_path.replace("images", "keypoints")
+    if not os.path.exists(os.path.dirname(keypoints_file_path)):
+        os.makedirs(os.path.dirname(keypoints_file_path))
+    # keypoints_file = "/home/manu.puthiyadath/projects/MvSMPLfitting/data/keypoints/sample_data_input/keypoints/200001/0_keypoints.json"
+    json_pose_object = keypoints_to_json_file(keypoints)
+    with open(
+        keypoints_file_path,
+        "w",
+    ) as outfile:
+        json.dump(json_pose_object, outfile)
+
+    det_keyps = keypoints
+    det_keyps = list(det_keyps[np.newaxis, :, :])
+    main(det_keyps, foldername, **args)
