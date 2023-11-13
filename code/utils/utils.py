@@ -1149,14 +1149,24 @@ def save_results(
             )
 
         if save_meshes:
-            curr_mesh_fn = osp.join(setting["mesh_folder"], serial, fn)
-            if not osp.exists(curr_mesh_fn):
-                os.makedirs(curr_mesh_fn)
+            betas = result["betas"]
+            ## save betas to a file in the same folder as the mesh
+            foldername = data["img_path"][0].split("/")[-2]
+
+            # curr_mesh_fn = osp.join(setting["mesh_folder"], serial, fn)
+            curr_mesh_fn = osp.join(
+                setting["mesh_folder"], serial, fn, foldername + ".obj"
+            )
+            if not osp.exists(curr_mesh_fn) and not osp.exists(
+                os.path.dirname(curr_mesh_fn)
+            ):
+                os.makedirs(os.path.dirname(curr_mesh_fn))
             mesh_fn = osp.join(curr_mesh_fn, "{:03d}.obj".format(person_id))
             out_mesh = trimesh.Trimesh(
                 verts.detach().squeeze().cpu().numpy(), model.faces, process=False
             )
-            out_mesh.export(mesh_fn)
+            # out_mesh.export(mesh_fn)
+            out_mesh.export(curr_mesh_fn)
 
 
 class Renderer:
