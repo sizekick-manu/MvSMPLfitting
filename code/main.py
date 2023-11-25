@@ -133,26 +133,26 @@ if __name__ == "__main__":
     args = parse_config()
 
     # foldername = ["0000/200002", "0001/200003"]
-    # foldername = "/home/manu.puthiyadath/data/silver/images/smpl-supernova-video-frames-png-2/dataset/n/image-renders/"
-    # foldernames = os.listdir(foldername)
-    # foldernames.sort()
-    # for folder in foldernames:
-    #     image_path = osp.join(foldername, folder, "20" + folder, "0.png")
-    #     image = cv2.imread(image_path)
-    #     outputs = predictor(image)
-    #     keypoints = outputs["instances"].pred_keypoints.cpu().numpy()
+    foldername = "/home/manu.puthiyadath/data/silver/images/smpl-supernova-video-frames-png-2/dataset/e/image-renders/"
+    foldernames = os.listdir(foldername)
+    foldernames.sort()
+    for folder in foldernames:
+        image_path = osp.join(foldername, folder, "20" + folder, "0.png")
+        image = cv2.imread(image_path)
+        outputs = predictor(image)
+        keypoints = outputs["instances"].pred_keypoints.cpu().numpy()
 
-    #     # keypoints_file_path = "data/keypoints/0000/Camera00/0_keypoints.json"
-    #     keypoints_file_path = image_path.replace(".png", ".json")
-    #     keypoints_file_path = keypoints_file_path.replace("image-renders", "keypoints")
-    #     if not os.path.exists(os.path.dirname(keypoints_file_path)):
-    #         os.makedirs(os.path.dirname(keypoints_file_path))
-    #     # keypoints_file = "/home/manu.puthiyadath/projects/MvSMPLfitting/data/keypoints/sample_data_input/keypoints/200001/0_keypoints.json"
-    #     json_pose_object = keypoints_to_json_file(keypoints)
-    #     with open(
-    #         keypoints_file_path,
-    #         "w",
-    #     ) as outfile:
-    #         json.dump(json_pose_object, outfile)
+        # keypoints_file_path = "data/keypoints/0000/Camera00/0_keypoints.json"
+        keypoints_file_path = image_path.replace(".png", ".json")
+        keypoints_file_path = keypoints_file_path.replace("image-renders", "keypoints")
+        if not os.path.exists(os.path.dirname(keypoints_file_path)):
+            os.makedirs(os.path.dirname(keypoints_file_path))
+        # keypoints_file = "/home/manu.puthiyadath/projects/MvSMPLfitting/data/keypoints/sample_data_input/keypoints/200001/0_keypoints.json"
+        json_pose_object = keypoints_to_json_file(keypoints)
+        with open(
+            keypoints_file_path,
+            "w",
+        ) as outfile:
+            json.dump(json_pose_object, outfile)
 
     main(**args)

@@ -1,7 +1,8 @@
 
 # data related
 # data_folder: "data"
-data_folder: "/home/manu.puthiyadath/data/silver/images/smpl-supernova-video-frames-png-2/dataset/n/"
+# data_folder: "/home/manu.puthiyadath/data/silver/images/smpl-supernova-video-frames-png-2/dataset/n/"
+data_folder: "/home/manu.puthiyadath/data/silver/images/smpl-supernova-video-frames-png-2/dataset/e/"
 cam_param: "data/3DOH50K_Parameters.txt"
 
 use_joints_conf: true
